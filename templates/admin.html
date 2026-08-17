@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Productos</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --card: #fff;
+      --ink: #1f2933;
+      --muted: #6b7280;
+      --line: #e5e0d6;
+      --accent: #2f6f4e;
+      --accent-soft: #e7f3ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    header h1 { margin: 0; font-size: 1.3rem; }
+    nav a {
+      margin-left: 1rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-family: system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+    nav a.activo { font-weight: 700; }
+    main {
+      max-width: 1280px;
+      margin: 2rem auto;
+      padding: 0 1rem 3rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1.4rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { margin: 0 0 1rem; font-size: 1.15rem; }
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.9rem;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+    }
+    input {
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .full { grid-column: 1 / -1; }
+    .tabla-wrap { overflow-x: auto; }
+    table { min-width: 980px; }
+    .dashboard-precios {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      font-family: system-ui, sans-serif;
+    }
+    .kpi {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 14px;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .kpi-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .kpi-icon {
+      flex: 0 0 32px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #f4f7f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e6b45;
+    }
+    .kpi-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+    .kpi-head h3 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #4a4a4a;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+    .kpi-fila {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
+    }
+    .kpi-fila span {
+      font-size: 12px;
+      color: #8a8a8a;
+      flex: 0 0 auto;
+    }
+    .kpi-monto {
+      margin: 0;
+      font-weight: bold;
+      font-size: 18px;
+      color: #1e6b45;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .kpi-detalle {
+      margin: 0;
+      font-size: 13px;
+      color: #8a8a8a;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+    .kpi-sufijo {
+      font-size: 13px;
+      font-weight: 500;
+      color: #8a8a8a;
+    }
+    @media (max-width: 1024px) {
+      .dashboard-precios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .dashboard-precios { grid-template-columns: 1fr; }
+    }
+    button[type="submit"],
+    #btn-cancelar {
+      border: 0;
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button[type="submit"] {
+      background: var(--accent);
+      color: #fff;
+    }
+    button[type="submit"]:hover { filter: brightness(1.08); }
+    .acciones-form {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 0.7rem;
+    }
+    .acciones-form button { flex: 1; }
+    #btn-cancelar {
+      display: none;
+      background: #6b7280;
+      color: #fff;
+    }
+    #btn-cancelar.visible { display: inline-block; }
+    .msg { margin-top: 0.8rem; font-family: system-ui, sans-serif; font-size: 0.9rem; }
+    .ok { color: var(--accent); }
+    .error { color: #b42318; }
+    table { width: 100%; border-collapse: collapse; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+    th, td { text-align: left; padding: 0.6rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    th { color: var(--muted); font-weight: 600; }
+    .celda-empaque {
+      line-height: 1.25;
+    }
+    .celda-empaque .text-muted {
+      display: block;
+      margin-top: 2px;
+      color: #8a8a8a;
+      font-size: 0.78rem;
+    }
+    .vacio { color: var(--muted); }
+    .acciones { display: flex; gap: 0.4rem; white-space: nowrap; }
+    .btn-tabla {
+      border: 0;
+      border-radius: 6px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: #fff;
+    }
+    .btn-editar { background: #345c9e; }
+    .btn-eliminar { background: #b42318; }
+    @media (max-width: 640px) {
+      form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Inventario — Administración</h1>
+    <nav>
+      <a class="activo" href="/admin">Admin</a>
+      <a href="/cliente">Cliente</a>
+    </nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2 id="titulo-form">Ingresar producto</h2>
+      <form id="form-producto">
+        <label class="full">
+          Nombre
+          <input name="nombre" required placeholder="Ej. Café molido">
+        </label>
+        <label>
+          Costo por empaque
+          <input name="costo" type="number" min="0.01" step="0.01" required>
+        </label>
+        <label>
+          Unidades por empaque
+          <input name="unidades_por_empaque" type="number" min="1" step="1" value="1" required placeholder="Ej. 12, 24 o 1">
+        </label>
+        <label>
+          Porcentaje de ganancia
+          <input name="porcentaje_ganancia" type="number" min="0" step="0.01" required>
+        </label>
+        <label>
+          Stock actual (empaques)
+          <input name="stock" type="number" min="0" step="1" required>
+        </label>
+        <div class="dashboard-precios full">
+          <article class="kpi">
+            <div class="kpi-head">
+              <span class="kpi-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 8V21H3V8"></path>
+                  <path d="M1 3h22v5H1z"></path>
+                  <path d="M10 12h4"></path>
+                </svg>
+              </span>
+              <h3>Costos</h3>
+            </div>
+            <p class="kpi-fila">
+              <span>Empaque</span>
+              <strong class="kpi-monto" id="costo-empaque">$0.00</strong>
+            </p>
+            <p class="kpi-detalle">Unidad: <span id="costo-unitario">$0.00</span></p>
+          </article>
+
+          <article class="kpi">
+            <div class="kpi-head">
+              <span class="kpi-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                  <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+              </span>
+              <h3>Precios de venta</h3>
+            </div>
+            <p class="kpi-fila">
+              <span>Empaque</span>
+              <strong class="kpi-monto" id="precio-venta">$0.00</strong>
+            </p>
+            <p class="kpi-detalle">Unidad: <span id="precio-venta-unitario">$0.00</span></p>
+          </article>
+
+          <article class="kpi">
+            <div class="kpi-head">
+              <span class="kpi-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 8v8"></path>
+                  <path d="M8 12h8"></path>
+                </svg>
+              </span>
+              <h3>Ganancia por unidad</h3>
+            </div>
+            <p class="kpi-monto">
+              <span id="ganancia-unidad">$0.00</span>
+              <span class="kpi-sufijo"> / unid.</span>
+            </p>
+            <p class="kpi-detalle">Precio venta unidad − costo unidad</p>
+          </article>
+
+          <article class="kpi">
+            <div class="kpi-head">
+              <span class="kpi-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3v18h18"></path>
+                  <path d="M7 14l4-4 3 3 6-7"></path>
+                </svg>
+              </span>
+              <h3>Ganancia por empaque</h3>
+            </div>
+            <p class="kpi-monto">
+              <span id="ganancia-empaque">$0.00</span>
+              <span class="kpi-sufijo"> / empaque</span>
+            </p>
+            <p class="kpi-detalle">Precio venta empaque − costo empaque</p>
+          </article>
+        </div>
+        <div class="acciones-form">
+          <button type="submit" id="btn-guardar">Guardar producto</button>
+          <button type="button" id="btn-cancelar">Cancelar edición</button>
+        </div>
+      </form>
+      <p id="mensaje" class="msg"></p>
+    </section>
+
+    <section class="card">
+      <h2>Productos registrados</h2>
+      <div id="lista-productos" class="vacio">Cargando...</div>
+    </section>
+
+    <section class="card">
+      <h2>Cuentas por cobrar / Deudores</h2>
+      <p class="vacio" style="margin-top:0">Lista de clientes y su saldo pendiente.</p>
+      <div id="lista-deudores" class="vacio">Cargando...</div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("form-producto");
+    const mensaje = document.getElementById("mensaje");
+    const tituloForm = document.getElementById("titulo-form");
+    const btnGuardar = document.getElementById("btn-guardar");
+    const btnCancelar = document.getElementById("btn-cancelar");
+    const costoEmpaqueEl = document.getElementById("costo-empaque");
+    const costoUnitarioEl = document.getElementById("costo-unitario");
+    const precioVentaEl = document.getElementById("precio-venta");
+    const precioVentaUnitarioEl = document.getElementById("precio-venta-unitario");
+    const gananciaUnidadEl = document.getElementById("ganancia-unidad");
+    const gananciaEmpaqueEl = document.getElementById("ganancia-empaque");
+
+    let productosCache = [];
+    let productoEditandoId = null;
+
+    function dinero(valor) {
+      return "$" + Number(valor).toFixed(2);
+    }
+
+    function unidadesEmpaque(producto) {
+      return Number(producto.unidades_por_empaque) > 0
+        ? Number(producto.unidades_por_empaque)
+        : 1;
+    }
+
+    function calcularPrecios(costoEmpaque, porcentaje, unidades) {
+      const unid = unidades > 0 ? unidades : 1;
+      const costoUnitario = costoEmpaque / unid;
+      const precioVentaUnitario = costoUnitario * (1 + porcentaje / 100);
+      const precioVentaEmpaque = precioVentaUnitario * unid;
+      return {
+        costoEmpaque,
+        costoUnitario,
+        precioVentaUnitario,
+        precioVentaEmpaque,
+        gananciaUnidad: precioVentaUnitario - costoUnitario,
+        gananciaEmpaque: precioVentaEmpaque - costoEmpaque,
+      };
+    }
+
+    function calcularPrecio() {
+      const costoEmpaque = Number(form.costo.value) || 0;
+      const porcentaje = Number(form.porcentaje_ganancia.value) || 0;
+      const unidades = Number(form.unidades_por_empaque.value) || 1;
+      const precios = calcularPrecios(costoEmpaque, porcentaje, unidades);
+      costoEmpaqueEl.textContent = dinero(precios.costoEmpaque);
+      costoUnitarioEl.textContent = dinero(precios.costoUnitario);
+      precioVentaEl.textContent = dinero(precios.precioVentaEmpaque);
+      precioVentaUnitarioEl.textContent = dinero(precios.precioVentaUnitario);
+      gananciaUnidadEl.textContent = dinero(precios.gananciaUnidad);
+      gananciaEmpaqueEl.textContent = dinero(precios.gananciaEmpaque);
+    }
+
+    function payloadFormulario() {
+      return {
+        nombre: form.nombre.value.trim(),
+        costo: Number(form.costo.value),
+        porcentaje_ganancia: Number(form.porcentaje_ganancia.value),
+        unidades_por_empaque: Number(form.unidades_por_empaque.value) || 1,
+        stock: Number(form.stock.value),
+      };
+    }
+
+    function modoCrear() {
+      productoEditandoId = null;
+      tituloForm.textContent = "Ingresar producto";
+      btnGuardar.textContent = "Guardar producto";
+      btnCancelar.classList.remove("visible");
+      form.reset();
+      form.unidades_por_empaque.value = 1;
+      calcularPrecio();
+    }
+
+    function iniciarEdicion(id) {
+      const producto = productosCache.find((item) => item.id === id);
+      if (!producto) return;
+      productoEditandoId = id;
+      form.nombre.value = producto.nombre;
+      form.costo.value = producto.costo;
+      form.unidades_por_empaque.value = producto.unidades_por_empaque;
+      form.porcentaje_ganancia.value = producto.porcentaje_ganancia;
+      form.stock.value = producto.stock;
+      tituloForm.textContent = "Editar producto";
+      btnGuardar.textContent = "Guardar cambios";
+      btnCancelar.classList.add("visible");
+      calcularPrecio();
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function eliminarProducto(id, nombre) {
+      if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) {
+        return;
+      }
+      const respuesta = await fetch("/productos/" + id, { method: "DELETE" });
+      if (!respuesta.ok) {
+        const error = await respuesta.json().catch(() => ({}));
+        mensaje.textContent = error.detail || "No se pudo eliminar el producto.";
+        mensaje.className = "msg error";
+        return;
+      }
+      if (productoEditandoId === id) {
+        modoCrear();
+      }
+      mensaje.textContent = `Producto "${nombre}" eliminado.`;
+      mensaje.className = "msg ok";
+      cargarProductos();
+    }
+
+    form.costo.addEventListener("input", calcularPrecio);
+    form.porcentaje_ganancia.addEventListener("input", calcularPrecio);
+    form.unidades_por_empaque.addEventListener("input", calcularPrecio);
+    btnCancelar.addEventListener("click", modoCrear);
+
+    async function cargarProductos() {
+      const caja = document.getElementById("lista-productos");
+      productosCache = await fetch("/productos").then((r) => r.json());
+      if (!productosCache.length) {
+        caja.innerHTML = '<p class="vacio">Aún no hay productos.</p>';
+        return;
+      }
+      caja.innerHTML = `
+        <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre del producto</th>
+              <th>Empaques / Unidades</th>
+              <th>Costo Empaque (Costo Unid.)</th>
+              <th>Precio Venta Unid.</th>
+              <th>Precio Venta Empaque</th>
+              <th>Stock (Empaques / Unidades totales)</th>
+              <th>Ganancia/Unid.</th>
+              <th>Ganancia Total Inventario</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${productosCache.map((p) => {
+              const unidades = unidadesEmpaque(p);
+              const precios = calcularPrecios(p.costo, p.porcentaje_ganancia, unidades);
+              const unidadesTotales = p.stock * unidades;
+              const etiquetaUnids = unidadesTotales === 1 ? "unid." : "unids.";
+              const gananciaTotal = precios.gananciaEmpaque * p.stock;
+              return `
+              <tr>
+                <td>${p.nombre}</td>
+                <td class="celda-empaque">
+                  <div><strong>${p.stock} emp.</strong></div>
+                  <small class="text-muted">(${unidadesTotales} ${etiquetaUnids})</small>
+                </td>
+                <td>${dinero(precios.costoEmpaque)} (${dinero(precios.costoUnitario)})</td>
+                <td>${dinero(precios.precioVentaUnitario)}</td>
+                <td>${dinero(precios.precioVentaEmpaque)}</td>
+                <td>${p.stock} / ${unidadesTotales}</td>
+                <td>${dinero(precios.gananciaUnidad)}</td>
+                <td>${dinero(gananciaTotal)}</td>
+                <td>
+                  <div class="acciones">
+                    <button type="button" class="btn-tabla btn-editar" data-editar="${p.id}">Editar</button>
+                    <button type="button" class="btn-tabla btn-eliminar" data-eliminar="${p.id}">Eliminar</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+            }).join("")}
+          </tbody>
+        </table>
+        </div>
+      `;
+      caja.querySelectorAll("[data-editar]").forEach((boton) => {
+        boton.addEventListener("click", () => iniciarEdicion(Number(boton.dataset.editar)));
+      });
+      caja.querySelectorAll("[data-eliminar]").forEach((boton) => {
+        boton.addEventListener("click", () => {
+          const id = Number(boton.dataset.eliminar);
+          const producto = productosCache.find((item) => item.id === id);
+          eliminarProducto(id, producto ? producto.nombre : "este producto");
+        });
+      });
+    }
+
+    form.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      mensaje.textContent = "";
+      mensaje.className = "msg";
+      const payload = payloadFormulario();
+      const editando = productoEditandoId !== null;
+      const respuesta = await fetch(
+        editando ? "/productos/" + productoEditandoId : "/productos",
+        {
+          method: editando ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!respuesta.ok) {
+        const error = await respuesta.json().catch(() => ({}));
+        mensaje.textContent = error.detail || "No se pudo guardar el producto.";
+        mensaje.classList.add("error");
+        return;
+      }
+      const producto = await respuesta.json();
+      mensaje.textContent = editando
+        ? `Actualizado: ${producto.nombre} — unid. ${dinero(producto.precio_venta_unitario)} / empaque ${dinero(producto.precio_venta_empaque)}.`
+        : `Guardado: ${producto.nombre} — unid. ${dinero(producto.precio_venta_unitario)} / empaque ${dinero(producto.precio_venta_empaque)}.`;
+      mensaje.classList.add("ok");
+      modoCrear();
+      cargarProductos();
+    });
+
+    cargarProductos();
+    cargarDeudores();
+
+    async function cargarDeudores() {
+      const caja = document.getElementById("lista-deudores");
+      const deudores = await fetch("/api/deudores").then((r) => r.json()).catch(() => []);
+      if (!deudores.length) {
+        caja.innerHTML = '<p class="vacio">Aún no hay clientes con cuentas registradas.</p>';
+        return;
+      }
+      caja.innerHTML = `
+        <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Consumos</th>
+              <th>Estado</th>
+              <th>Saldo pendiente</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${deudores.map((d) => `
+              <tr>
+                <td>${d.nombre}</td>
+                <td>${d.consumos}</td>
+                <td>${d.estado}</td>
+                <td><strong>${dinero(d.saldo_pendiente)}</strong></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

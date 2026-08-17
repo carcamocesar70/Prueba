@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cliente — Consumo</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --card: #fff;
+      --ink: #1f2933;
+      --muted: #6b7280;
+      --line: #e5e0d6;
+      --accent: #2f6f4e;
+      --accent-soft: #e7f3ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    header h1 { margin: 0; font-size: 1.3rem; }
+    nav a {
+      margin-left: 1rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-family: system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+    nav a.activo { font-weight: 700; }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin: 0 auto 1.4rem;
+      max-width: 920px;
+      padding: 0 1rem;
+      font-family: system-ui, sans-serif;
+    }
+    .tab {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.55rem 1rem;
+      cursor: pointer;
+    }
+    .tab.activo {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .busqueda {
+      display: flex;
+      gap: 0.7rem;
+      align-items: flex-end;
+      font-family: system-ui, sans-serif;
+    }
+    .busqueda label { flex: 1; }
+    .busqueda button { white-space: nowrap; }
+    .saldo-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.1rem 1.2rem;
+      background: #fff;
+      margin-bottom: 1.2rem;
+    }
+    .saldo-card h3 {
+      margin: 0 0 0.35rem;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #4a4a4a;
+      font-family: system-ui, sans-serif;
+    }
+    .saldo-monto {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e6b45;
+      font-family: system-ui, sans-serif;
+    }
+    .saldo-estado {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-family: system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+    .vista { display: none; }
+    .vista.visible { display: block; }
+    .tabla-wrap { overflow-x: auto; }
+    @media (max-width: 640px) {
+      .busqueda { flex-direction: column; align-items: stretch; }
+      .resumen { flex-direction: column; align-items: stretch; }
+    }
+    main {
+      max-width: 920px;
+      margin: 2rem auto;
+      padding: 0 1rem 3rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1.4rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { margin: 0 0 1rem; font-size: 1.15rem; }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+    }
+    input {
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    table { width: 100%; border-collapse: collapse; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+    th, td { text-align: left; padding: 0.65rem 0.4rem; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; }
+    td input { width: 90px; }
+    .precio-unid {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      line-height: 1.25;
+    }
+    .precio-unid small {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .vacio, .ayuda { color: var(--muted); font-family: system-ui, sans-serif; }
+    .resumen {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      background: var(--accent-soft);
+      border-radius: 8px;
+      padding: 0.9rem;
+      font-family: system-ui, sans-serif;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 0.75rem 1.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    button.tab {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+    button.tab.activo {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .msg { margin-top: 0.8rem; font-family: system-ui, sans-serif; font-size: 0.9rem; }
+    .ok { color: var(--accent); }
+    .error { color: #b42318; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Portal del cliente</h1>
+    <nav>
+      <a href="/admin">Admin</a>
+      <a class="activo" href="/cliente">Cliente</a>
+    </nav>
+  </header>
+  <div class="tabs">
+    <button type="button" class="tab activo" data-vista="consumo">Consumo</button>
+    <button type="button" class="tab" data-vista="deuda">Mi Deuda</button>
+  </div>
+  <main>
+    <div id="vista-consumo" class="vista visible">
+    <section class="card">
+      <h2>Tus datos</h2>
+      <label>
+        Nombre
+        <input id="nombre-cliente" required placeholder="Escribe tu nombre">
+      </label>
+    </section>
+
+    <section class="card">
+      <h2>Productos disponibles</h2>
+      <p class="ayuda">Indica cuántas unidades individuales llevaste. El stock se muestra en unidades, no en empaques.</p>
+      <div id="lista-productos" class="vacio">Cargando...</div>
+      <div class="resumen">
+        <div>Total a cargo: <strong id="total">$0.00</strong></div>
+        <button id="btn-confirmar" type="button">Confirmar consumo</button>
+      </div>
+      <p id="mensaje" class="msg"></p>
+    </section>
+    </div>
+
+    <div id="vista-deuda" class="vista">
+      <section class="card">
+        <h2>Mi Deuda</h2>
+        <p class="ayuda">Consulta tu saldo pendiente y el historial de lo que has consumido.</p>
+        <div class="busqueda">
+          <label>
+            Nombre del cliente
+            <input id="nombre-deuda" placeholder="Escribe el nombre para consultar">
+          </label>
+          <button type="button" id="btn-consultar-deuda">Consultar Deuda</button>
+        </div>
+        <p id="mensaje-deuda" class="msg"></p>
+        <div id="resultado-deuda"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const lista = document.getElementById("lista-productos");
+    const totalEl = document.getElementById("total");
+    const mensaje = document.getElementById("mensaje");
+    const boton = document.getElementById("btn-confirmar");
+    let productos = [];
+
+    function filasSeleccionadas() {
+      return productos
+        .map((producto) => {
+          const input = document.querySelector(`input[data-id="${producto.id}"]`);
+          const cantidad = Number(input && input.value) || 0;
+          return { producto, cantidad };
+        })
+        .filter((item) => item.cantidad > 0);
+    }
+
+    function unidadesPorEmpaque(producto) {
+      return Number(producto.unidades_por_empaque) > 0
+        ? Number(producto.unidades_por_empaque)
+        : 1;
+    }
+
+    function stockUnidades(producto) {
+      return producto.stock * unidadesPorEmpaque(producto);
+    }
+
+    function precioUnitario(producto) {
+      const unidades = unidadesPorEmpaque(producto);
+      const costoEmpaque = Number(producto.costo_empaque ?? producto.costo) || 0;
+      const porcentaje = Number(producto.porcentaje_ganancia) || 0;
+      return (costoEmpaque / unidades) * (1 + porcentaje / 100);
+    }
+
+    function actualizarTotal() {
+      const total = filasSeleccionadas().reduce(
+        (suma, item) => suma + precioUnitario(item.producto) * item.cantidad,
+        0
+      );
+      totalEl.textContent = "$" + total.toFixed(2);
+    }
+
+    async function cargarProductos() {
+      const todos = await fetch("/productos").then((r) => r.json());
+      productos = todos.filter((p) => stockUnidades(p) > 0);
+      if (!productos.length) {
+        lista.innerHTML = '<p class="vacio">No hay productos disponibles.</p>';
+        boton.disabled = true;
+        return;
+      }
+      boton.disabled = false;
+      lista.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio / unid.</th>
+              <th>Stock</th>
+              <th>Cantidad que llevé</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${productos.map((p) => {
+              const disponibles = stockUnidades(p);
+              const etiqueta = disponibles === 1 ? "unid." : "unids.";
+              const precioUnidad = precioUnitario(p);
+              return `
+              <tr>
+                <td>${p.nombre}</td>
+                <td>
+                  <div class="precio-unid">
+                    <strong>$${precioUnidad.toFixed(2)}</strong>
+                    <small>por unidad</small>
+                  </div>
+                </td>
+                <td>${disponibles} ${etiqueta}</td>
+                <td>
+                  <input type="number" min="0" max="${disponibles}" step="1" value="0" data-id="${p.id}">
+                </td>
+              </tr>
+            `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+      lista.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("input", actualizarTotal);
+      });
+      actualizarTotal();
+    }
+
+    boton.addEventListener("click", async () => {
+      mensaje.textContent = "";
+      mensaje.className = "msg";
+      const nombre = document.getElementById("nombre-cliente").value.trim();
+      const items = filasSeleccionadas().map((item) => ({
+        producto_id: item.producto.id,
+        cantidad: item.cantidad,
+      }));
+
+      if (!nombre) {
+        mensaje.textContent = "Escribe tu nombre para confirmar.";
+        mensaje.classList.add("error");
+        return;
+      }
+      if (!items.length) {
+        mensaje.textContent = "Selecciona al menos un producto.";
+        mensaje.classList.add("error");
+        return;
+      }
+
+      boton.disabled = true;
+      const respuesta = await fetch("/consumos/confirmar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, items }),
+      });
+      const data = await respuesta.json().catch(() => ({}));
+      if (!respuesta.ok) {
+        mensaje.textContent = data.detail || "No se pudo registrar el consumo.";
+        mensaje.classList.add("error");
+        boton.disabled = false;
+        return;
+      }
+      mensaje.textContent =
+        `Listo, ${data.cliente.nombre}. Se descontó el inventario y tu deuda quedó en $${data.cuenta.total.toFixed(2)}.`;
+      mensaje.classList.add("ok");
+      document.getElementById("nombre-cliente").value = "";
+      await cargarProductos();
+    });
+
+    cargarProductos();
+
+    const vistaConsumo = document.getElementById("vista-consumo");
+    const vistaDeuda = document.getElementById("vista-deuda");
+    const nombreDeuda = document.getElementById("nombre-deuda");
+    const mensajeDeuda = document.getElementById("mensaje-deuda");
+    const resultadoDeuda = document.getElementById("resultado-deuda");
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((item) => item.classList.remove("activo"));
+        tab.classList.add("activo");
+        const destino = tab.dataset.vista;
+        vistaConsumo.classList.toggle("visible", destino === "consumo");
+        vistaDeuda.classList.toggle("visible", destino === "deuda");
+        if (destino === "deuda" && !nombreDeuda.value) {
+          nombreDeuda.value = document.getElementById("nombre-cliente").value.trim();
+        }
+      });
+    });
+
+    async function consultarDeuda() {
+      const nombre = nombreDeuda.value.trim();
+      mensajeDeuda.textContent = "";
+      mensajeDeuda.className = "msg";
+      resultadoDeuda.innerHTML = "";
+      if (!nombre) {
+        mensajeDeuda.textContent = "Escribe el nombre del cliente.";
+        mensajeDeuda.classList.add("error");
+        return;
+      }
+      const respuesta = await fetch("/api/deuda/" + encodeURIComponent(nombre));
+      const data = await respuesta.json().catch(() => ({}));
+      if (!respuesta.ok) {
+        mensajeDeuda.textContent = data.detail || "No se encontró el cliente.";
+        mensajeDeuda.classList.add("error");
+        return;
+      }
+      const historial = data.historial && data.historial.length
+        ? `
+          <div class="tabla-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Productos consumidos</th>
+                  <th>Cantidad de unidades</th>
+                  <th>Total registrado</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.historial.map((linea) => `
+                  <tr>
+                    <td>${linea.fecha || "Sin fecha"}</td>
+                    <td>${linea.producto}</td>
+                    <td>${linea.cantidad}</td>
+                    <td>$${Number(linea.total).toFixed(2)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        `
+        : '<p class="ayuda">Aún no hay consumos registrados.</p>';
+      resultadoDeuda.innerHTML = `
+        <div class="saldo-card">
+          <h3>Saldo pendiente de ${data.nombre}</h3>
+          <p class="saldo-monto">$${Number(data.saldo_pendiente).toFixed(2)}</p>
+          <p class="saldo-estado">Estado: ${data.estado}</p>
+        </div>
+        <h2>Historial de consumos</h2>
+        ${historial}
+      `;
+    }
+
+    document.getElementById("btn-consultar-deuda").addEventListener("click", consultarDeuda);
+    nombreDeuda.addEventListener("keydown", (evento) => {
+      if (evento.key === "Enter") {
+        evento.preventDefault();
+        consultarDeuda();
+      }
+    });
+  </script>
+</body>
+</html>
